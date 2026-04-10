@@ -6,6 +6,7 @@ from tkinter import ttk  # importing the tkinter library to create a GUI applica
 
 root = tk.Tk()
 root.geometry("1024x700")
+root.resizable(False, False)
 root.title("CPU Scheduler")
 root.configure(bg="#1A1919")  # Set background color
 
