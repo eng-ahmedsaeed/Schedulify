@@ -20,8 +20,10 @@ class SJF:
         SortedProcessList[0].EndTime=SortedProcessList[0].StartTime+SortedProcessList[0].BurstTime
         SortedProcessList[0].TurnAround=SortedProcessList[0].EndTime-SortedProcessList[0].ArrivalTime
         SortedProcessList[0].WaitingTime=SortedProcessList[0].TurnAround-SortedProcessList[0].BurstTime
+        
         self.AvgTurnAround+=SortedProcessList[0].TurnAround
         self.AvgWaitingTime+=SortedProcessList[0].WaitingTime
+        
         Counter+=SortedProcessList[0].EndTime
         #searching for leastBurst avilable process
         #calculating the ProcessProperities in the same iteration
@@ -58,12 +60,12 @@ class SJF:
 
     def SJFAlgoPreemptive (self): 
         SortedProcessList=[] 
-        self.ProcessList.sort(key=lambda p: (p.RemainingTime,p.ArrivalTime))
+        ##self.ProcessList.sort(key=lambda p: (p.RemainingTime,p.ArrivalTime))
         Counter=0
         FinishedProcess=0
         while(len(self.ProcessList)!=FinishedProcess):
             #intialize the minimum remaining time to infinity and selected process to null
-            minRemain= int('inf')
+            minRemain= float('inf')
             selectProcess=None
             #searching for leastBurst avilable process
             self.ProcessList.sort(key=lambda p: (p.ArrivalTime,p.RemainingTime))
@@ -80,17 +82,19 @@ class SJF:
                 # if The pocess is starting for the first time set the start time
                 if(selectProcess.RemainingTime==selectProcess.BurstTime):
                     selectProcess.StartTime=Counter
+
                 selectProcess.RemainingTime-=1
+                
                 #if the process is finished calculate the properties and update the counter
                 if(selectProcess.RemainingTime==0):
-                    self.ProcessList.EndTime=Counter+1
+                    selectProcess.EndTime=Counter+1
                     FinishedProcess+=1
                     ProcessTurnAround=selectProcess.EndTime-selectProcess.ArrivalTime
-                    selectProcess.TurnAroundTime=ProcessTurnAround
+                    selectProcess.TurnAround = ProcessTurnAround
                     self.AvgTurnAround+=ProcessTurnAround
                     ProcessWaitingTime=ProcessTurnAround-selectProcess.BurstTime
                     selectProcess.WaitingTime=ProcessWaitingTime
-                    self.AvgWaitingTimeAround+=ProcessWaitingTime
+                    self.AvgWaitingTime += ProcessWaitingTime
                 #creating a new process with burst time 1 to be added in the sorted list
 
                 CreatedProcess= copy.deepcopy(selectProcess)
@@ -99,6 +103,10 @@ class SJF:
                 CreatedProcess.BurstTime=1
                 SortedProcessList.append(CreatedProcess)
                 Counter +=1
+
+        n = len(self.ProcessList)
+        self.AvgTurnAround /= n
+        self.AvgWaitingTime /= n
         return SortedProcessList,self.AvgWaitingTime,self.AvgTurnAround,self.ProcessList
 
         

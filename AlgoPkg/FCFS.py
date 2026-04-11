@@ -18,7 +18,7 @@ class FCFS:
         self.AvgTurnAround+=self.ProcessList[0].TurnAround
         self.AvgWaitingTime+=self.ProcessList[0].WaitingTime
         for i in range(1,len(self.ProcessList)):
-            if self.ProcessList[i].ArrivalTime<counter:
+            if self.ProcessList[i].ArrivalTime<=counter:
                 self.ProcessList[i].StartTime=self.ProcessList[i-1].EndTime
                 self.ProcessList[i].EndTime=self.ProcessList[i].StartTime+self.ProcessList[i].BurstTime
             else:

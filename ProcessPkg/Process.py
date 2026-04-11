@@ -1,8 +1,5 @@
-
-
 class Process:
-    def __init__(self,PID,ArrivalTime=None,Priority=None,BurstTime=None,StartTime=None,EndTime=None,TurnAround=None,WaitingTime=None):
-        
+    def __init__(self,PID,ArrivalTime=None,Priority=None,BurstTime=None,StartTime=None,EndTime=None,TurnAround=None,WaitingTime=None,RemainingTime=None):
         self.PID=PID
         self.ArrivalTime=ArrivalTime
         self.Priority=Priority
@@ -11,6 +8,7 @@ class Process:
         self.EndTime=EndTime
         self.TurnAround=TurnAround
         self.WaitingTime=WaitingTime
+        self.RemainingTime=BurstTime
         self.status="Not Started"
 #setter and getters   
     def get_PID(self):
