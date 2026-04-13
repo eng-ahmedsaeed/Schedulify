@@ -18,15 +18,15 @@ It is built in Python and PyQt6 that simulates and visualizes standard Operating
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 ---
 
-## 🛠️ Tech
+## Tech
 * **Language:** Python 3.x
 * **GUI Framework:** PyQt6 (Multimedia, GraphicsView, Core)
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### 1. Clone the repository
 ```bash
