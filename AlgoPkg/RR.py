@@ -1,59 +1,71 @@
+from collections import Counter
+from concurrent.futures import process
 from ProcessPkg.Process import Process
 import copy
 
 class RR:
     def __init__(self, ProcessList):
-        self.ProcessList = copy.deepcopy(ProcessList)
+        self.ProcessList = ProcessList
         self.AvgTurnAround = 0
         self.AvgWaitingTime = 0
 
     def RR(self, TimeQuantum):
-        SortedProcessList = []
-        Counter = 0
+        counter = 0
         n = len(self.ProcessList)
         FinishedProcess = 0
-
+        currentTurn = 0
+        currentProcess = None
         remaining = sorted(self.ProcessList, key=lambda p: p.ArrivalTime)
         queue = []
-        
-        while FinishedProcess != n:
-            
-            #filling queue with arrived processes
-            for p in remaining:
-                if p.ArrivalTime <= Counter and p.RemainingTime > 0:
-                    queue.append(p)
+        i = 0
+        timeLine = []
 
-            # idle time
-            if not queue:
-                Counter += 1
+        while FinishedProcess != n:
+            while i < n:
+                if remaining[i].ArrivalTime <= counter:
+                    queue.append(remaining[i])
+                    i += 1
+                else:
+                    break
+
+            if not queue and currentProcess is None:
+                counter += 1
                 continue
 
-            process = queue.pop(0)
+            if currentTurn <= 0:
+                if currentProcess and currentProcess.RemainingTime == 0:
+                    currentProcess.EndTime = counter
+                    currentProcess.TurnAround = counter - currentProcess.ArrivalTime
+                    currentProcess.WaitingTime = currentProcess.TurnAround - currentProcess.BurstTime
+                    self.AvgTurnAround += currentProcess.TurnAround
+                    self.AvgWaitingTime += currentProcess.WaitingTime
+                    FinishedProcess += 1
+                    currentProcess = None
 
-            if process.RemainingTime == process.BurstTime:
-                process.StartTime = Counter
+                elif currentProcess and currentProcess.RemainingTime > 0:
+                    queue.append(currentProcess)
+                    currentProcess = None
 
-            timeTaking = min(process.RemainingTime, TimeQuantum)
-            Counter += timeTaking
-            process.RemainingTime -= timeTaking
+                if queue:
+                    currentProcess = queue.pop(0)
+                    if currentProcess.RemainingTime == currentProcess.BurstTime:
+                        currentProcess.StartTime = counter
 
-            if process.RemainingTime == 0:
-                FinishedProcess += 1
-                process.EndTime = Counter
-                process.TurnAround = process.EndTime - process.ArrivalTime
-                self.AvgTurnAround += process.TurnAround
-                process.WaitingTime = process.TurnAround - process.BurstTime
-                self.AvgWaitingTime += process.WaitingTime
-            else:
-                queue.append(process) 
+                    currentTurn = min(TimeQuantum, currentProcess.RemainingTime)
 
-            for secondTime in range(Counter - timeTaking, Counter):
-                CreatedProcess = copy.deepcopy(process)
-                CreatedProcess.BurstTime = 1
-                CreatedProcess.StartTime = secondTime
-                CreatedProcess.EndTime = secondTime + 1
-                SortedProcessList.append(CreatedProcess)
+                    timeLine.append({
+                        "PID": currentProcess.PID,
+                        "StartTime": counter,
+                        "EndTime": counter + currentTurn
+                    })
+
+            if currentProcess:
+                currentProcess.RemainingTime -= 1
+                currentTurn -= 1
+
+            counter += 1
+
 
         self.AvgTurnAround /= n
         self.AvgWaitingTime /= n
-        return SortedProcessList, self.AvgWaitingTime, self.AvgTurnAround, self.ProcessList
+        return timeLine, self.AvgWaitingTime, self.AvgTurnAround
