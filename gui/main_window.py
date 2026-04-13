@@ -24,7 +24,6 @@ class CPUSchedulerApp(QWidget):
         self.layout.setContentsMargins(20, 20, 20, 20)
         self.layout.setSpacing(15)
 
-        # --- Live Animation Tracking Variables ---
         self.timer = QTimer()
         self.timer.timeout.connect(self.draw_next_tick)
         self.current_time = 0
@@ -35,7 +34,6 @@ class CPUSchedulerApp(QWidget):
         self.setup_sounds()
 
     def setup_ui(self):
-        # --- Input Fields ---
         labels = ["PID", "Burst Time", "Arrival Time", "Priority", "Round Robin Quantum"]
         self.entries = {}
 
@@ -50,7 +48,6 @@ class CPUSchedulerApp(QWidget):
 
         self.layout.setColumnStretch(1, 1)
 
-        # --- Row 5: Submit & Inject ---
         self.btn_submit = QPushButton("Submit (Add to List)")
         self.btn_submit.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self.btn_submit.clicked.connect(self.submit)
@@ -65,7 +62,6 @@ class CPUSchedulerApp(QWidget):
         self.btn_inject.clicked.connect(self.inject_process) 
         self.layout.addWidget(self.btn_inject, 5, 1)
 
-        # --- Row 6: Algorithm Selection ---
         self.layout.addWidget(QLabel("Select Scheduling Algorithm:"), 6, 0)
         self.dropdown = QComboBox()
         self.algorithms = ["FCFS", "SJF (Preemptive)", "SJF (Non-Preemptive)", "Priority (Preemptive)", "Priority (Non-Preemptive)", "Round Robin"]
@@ -75,7 +71,6 @@ class CPUSchedulerApp(QWidget):
         self.dropdown.currentTextChanged.connect(self.toggle_inputs)
         self.toggle_inputs()
 
-        # --- Row 7: Mode Toggle & Reset ---
         self.chk_live_mode = QCheckBox("Enable Live Animation")
         self.chk_live_mode.setChecked(True) # Checked by default
         self.chk_live_mode.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
@@ -90,13 +85,11 @@ class CPUSchedulerApp(QWidget):
         self.btn_reset.clicked.connect(self.reset_system) 
         self.layout.addWidget(self.btn_reset, 7, 1)
 
-        # --- Row 8: Start Button ---
         self.btn_start = QPushButton("Start Simulation")
         self.btn_start.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         self.btn_start.clicked.connect(self.run_simulation) 
         self.layout.addWidget(self.btn_start, 8, 0, 1, 2) # Spans 2 columns
 
-        # --- Table (Spans Rows 0-8) ---
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(["PID", "Arrival", "Burst", "Remaining", "Priority"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -107,7 +100,6 @@ class CPUSchedulerApp(QWidget):
         self.layout.addWidget(self.table, 0, 2, 9, 1)
         self.layout.setColumnStretch(2, 2)
 
-        # --- Gantt Chart Canvas ---
         lbl_chart = QLabel("Gantt Chart")
         lbl_chart.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         self.layout.addWidget(lbl_chart, 9, 0, 1, 3)
@@ -118,7 +110,6 @@ class CPUSchedulerApp(QWidget):
         self.gantt_view.setStyleSheet("background-color: #1A1919; border: none;")
         self.layout.addWidget(self.gantt_view, 10, 0, 1, 3)
 
-        # --- Averages Labels ---
         self.lbl_avg_wait = QLabel("Average Waiting Time: N/A")
         self.lbl_avg_wait.setFont(QFont("Segoe UI", 16))
         self.layout.addWidget(self.lbl_avg_wait, 11, 0, 1, 2)
@@ -127,18 +118,14 @@ class CPUSchedulerApp(QWidget):
         self.lbl_avg_turn.setFont(QFont("Segoe UI", 16))
         self.layout.addWidget(self.lbl_avg_turn, 12, 0, 1, 2)
 
-        # --- Bottom Right Animated GIF ---
         self.gif_label = QLabel(self)
         
-        # Load the GIF from your assets folder
         self.movie = QMovie("assets/processing.gif") 
         self.movie.setScaledSize(QSize(64, 64))
         self.gif_label.setMovie(self.movie)
         
-        # Align it perfectly to the bottom right corner
         self.gif_label.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight)
         
-        # Add it to Row 11, Column 2 (spanning 2 rows downward so it fits perfectly next to your averages)
         self.layout.addWidget(self.gif_label, 11, 2, 2, 1)
 
 
@@ -195,7 +182,6 @@ class CPUSchedulerApp(QWidget):
 
         if not priority: priority = "0"
 
-        # 👇 THE OS ARCHITECT MAGIC 👇
         if self.timer.isActive():
             # If the live clock is ticking, the arrival time is EXACTLY right now!
             arrival = str(self.current_time)
@@ -203,7 +189,6 @@ class CPUSchedulerApp(QWidget):
             # If the clock is stopped (or in Instant Mode), use what they typed in the box.
             arrival = self.entries["Arrival Time"].text()
             if not arrival: arrival = "0"
-        # 👆 ---------------------- 👆
 
         # 2. Add it to the table with the calculated arrival time
         self.add_table_row(pid, arrival, burst, burst, priority)
@@ -377,7 +362,6 @@ class CPUSchedulerApp(QWidget):
 
         palette = ["#69F0AE", "#00BFA6", "#6C63FF", "#FF6B6B", "#FFD166", "#118AB2", "#EF476F"]
 
-        # Consolidate 1-second ticks into clean solid blocks for the instant drawing
         consolidated_timeline = []
         for event in sorted(self.master_timeline, key=lambda x: x[1]):
             if not consolidated_timeline:
@@ -461,22 +445,19 @@ class CPUSchedulerApp(QWidget):
         pixmap = pixmap.scaled(128, 128) 
     
         msg.setIconPixmap(pixmap)
-        msg.setStyleSheet("background-color: #2A2A2A; color: white;") # Keep your dark theme
+        msg.setStyleSheet("background-color: #2A2A2A; color: white;")
         msg.exec()
 
     def show_Error_Burst_PID(self):
         msg = QMessageBox(self)
         msg.setWindowTitle("No input")
         msg.setText("Please Provide PID and Burst Time")
-
-        # Load and set your custom image (e.g., a green checkmark or a CPU icon)
         pixmap = QPixmap("assets/No_input_icon.png")
 
-        # Optional: Scale the image down so it isn't massive
         pixmap = pixmap.scaled(128, 128) 
 
         msg.setIconPixmap(pixmap)
-        msg.setStyleSheet("background-color: #2A2A2A; color: white;") # Keep your dark theme
+        msg.setStyleSheet("background-color: #2A2A2A; color: white;")
         msg.exec()
 
     def show_Error_Invalid(self, error_msg):
@@ -486,7 +467,7 @@ class CPUSchedulerApp(QWidget):
         pixmap =QPixmap("assets/No_input_icon.png")
         pixmap= pixmap.scaled(128,128)
         msg.setIconPixmap(pixmap)
-        msg.setStyleSheet("background-color: #2A2A2A; color: white;") # Keep your dark theme
+        msg.setStyleSheet("background-color: #2A2A2A; color: white;")
         msg.exec()
 
 
