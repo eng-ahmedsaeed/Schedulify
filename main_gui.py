@@ -1,7 +1,6 @@
 import sys
+import os
 from PyQt6.QtWidgets import QApplication
-
-
 from gui.main_window import CPUSchedulerApp
 from theme import get_stylesheet
 

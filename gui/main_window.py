@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt6.QtWidgets import (QApplication, QWidget, QLabel, QLineEdit, 
                              QPushButton, QComboBox, QTableWidget, QTableWidgetItem, 
                              QGridLayout, QGraphicsScene, QGraphicsView, QHeaderView, QAbstractItemView, QCheckBox
@@ -120,7 +121,7 @@ class CPUSchedulerApp(QWidget):
 
         self.gif_label = QLabel(self)
         
-        self.movie = QMovie("assets/processing.gif") 
+        self.movie = QMovie(resource_path("assets/processing.gif")) 
         self.movie.setScaledSize(QSize(64, 64))
         self.gif_label.setMovie(self.movie)
         
@@ -495,7 +496,7 @@ class CPUSchedulerApp(QWidget):
         msg.setText("All processes have been successfully scheduled!")
     
         # Load and set your custom image (e.g., a green checkmark or a CPU icon)
-        pixmap = QPixmap("assets/success_icon.png")
+        pixmap = QPixmap(resource_path("assets/success_icon.png"))
     
         # Optional: Scale the image down so it isn't massive
         pixmap = pixmap.scaled(128, 128) 
@@ -508,7 +509,7 @@ class CPUSchedulerApp(QWidget):
         msg = QMessageBox(self)
         msg.setWindowTitle("No input")
         msg.setText("Please Provide PID and Burst Time")
-        pixmap = QPixmap("assets/No_input_icon.png")
+        pixmap = QPixmap(resource_path("assets/No_input_icon.png"))
 
         pixmap = pixmap.scaled(128, 128) 
 
@@ -520,7 +521,7 @@ class CPUSchedulerApp(QWidget):
         msg =QMessageBox(self)
         msg.setWindowTitle("Invalid Input")
         msg.setText(error_msg)
-        pixmap =QPixmap("assets/No_input_icon.png")
+        pixmap =QPixmap(resource_path("assets/No_input_icon.png"))
         pixmap= pixmap.scaled(128,128)
         msg.setIconPixmap(pixmap)
         msg.setStyleSheet("background-color: #2A2A2A; color: white;")
@@ -550,9 +551,21 @@ class CPUSchedulerApp(QWidget):
 
     def setup_sounds(self):
         self.success_sound = QSoundEffect()
-        self.success_sound.setSource(QUrl.fromLocalFile("assets/success.wav"))
+        self.success_sound.setSource(QUrl.fromLocalFile(resource_path("assets/success.wav")))
         self.success_sound.setVolume(1)
 
         self.tick_sound = QSoundEffect()
-        self.tick_sound.setSource(QUrl.fromLocalFile("assets/pop.wav"))
+        self.tick_sound.setSource(QUrl.fromLocalFile(resource_path("assets/pop.wav")))
         self.tick_sound.setVolume(0.8)
+
+def resource_path(relative_path):
+    """ Get the absolute path to a resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
