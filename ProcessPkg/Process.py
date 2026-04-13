@@ -1,5 +1,5 @@
 class Process:
-    def __init__(self,PID,ArrivalTime=None,Priority=None,BurstTime=None,StartTime=None,EndTime=None,TurnAround=None,WaitingTime=None,RemainingTime=None):
+    def __init__(self,PID,ArrivalTime=None,Priority=None,BurstTime=None,StartTime=None,EndTime=None,TurnAround=0,WaitingTime=0,RemainingTime=None):
         self.PID=PID
         self.ArrivalTime=ArrivalTime
         self.Priority=Priority
