@@ -3,7 +3,7 @@ import copy
 
 class RR:
     def __init__(self, ProcessList):
-        self.ProcessList = ProcessList
+        self.ProcessList = copy.deepcopy(ProcessList)
         self.AvgTurnAround = 0
         self.AvgWaitingTime = 0
 

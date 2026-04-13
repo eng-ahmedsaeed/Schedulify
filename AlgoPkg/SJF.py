@@ -2,7 +2,7 @@ from ProcessPkg.Process import Process
 import copy
 class SJF:
     def __init__(self,ProcessList):
-        self.ProcessList=ProcessList
+        self.ProcessList=copy.deepcopy(ProcessList)
         self.AvgTurnAround=0 
         self.AvgWaitingTime=0 
  
@@ -76,6 +76,7 @@ class SJF:
             #if there is no process available increase the counter and continue searching
             if(selectProcess==None):
                 Counter+=1
+                print("Counter: ",Counter)  
                 continue
             #if there is a process available execute it for 1 unit of time
             else:
@@ -97,12 +98,13 @@ class SJF:
                     self.AvgWaitingTime += ProcessWaitingTime
                 #creating a new process with burst time 1 to be added in the sorted list
 
-                CreatedProcess= copy.deepcopy(selectProcess)
+                CreatedProcess= Process(selectProcess.PID)    
                 CreatedProcess.StartTime=Counter
                 CreatedProcess.EndTime=Counter+1
                 CreatedProcess.BurstTime=1
                 SortedProcessList.append(CreatedProcess)
                 Counter +=1
+            print("Counter: ",Counter)  
 
         n = len(self.ProcessList)
         self.AvgTurnAround /= n

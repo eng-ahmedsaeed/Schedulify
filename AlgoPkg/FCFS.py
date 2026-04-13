@@ -1,7 +1,8 @@
 from ProcessPkg.Process import Process
+from copy import deepcopy
 class FCFS:
     def __init__(self,ProcessList):
-        self.ProcessList=ProcessList
+        self.ProcessList=deepcopy(ProcessList)
         self.AvgTurnAround=0 
         self.AvgWaitingTime=0 
  

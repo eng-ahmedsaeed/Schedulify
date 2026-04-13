@@ -52,12 +52,13 @@ class Process:
     def __str__(self):
         return (f"PID={self.PID}, "
                 f"ArrivalTime={self.ArrivalTime}, "
-                f"Priority={self.Priority}, "
+                # f"Priority={self.Priority}, "
                 f"BurstTime={self.BurstTime}, "
                 f"StartTime={self.StartTime}, "
                 f"EndTime={self.EndTime}, "
                 f"TurnAround={self.TurnAround}, "
                 f"WaitingTime={self.WaitingTime}, "
-                f"Status={self.status}")
+                # f"Status={self.status}"
+                )
     def __repr__(self):
         return self.__str__()
