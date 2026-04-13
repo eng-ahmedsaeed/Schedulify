@@ -105,7 +105,7 @@ class SJF:
                     SortedProcessList[-1].TurnAround=ProcessTurnAround
                     SortedProcessList[-1].WaitingTime=ProcessWaitingTime    
                 else:
-                    CreatedProcess= Process(selectProcess.PID,ArrivalTime=selectProcess.ArrivalTime)
+                    CreatedProcess= Process(selectProcess.PID,ArrivalTime=selectProcess.ArrivalTime,TurnAround=0,WaitingTime=0)
                     CreatedProcess.StartTime=Counter
                     CreatedProcess.EndTime=Counter+1
                     CreatedProcess.BurstTime=1
