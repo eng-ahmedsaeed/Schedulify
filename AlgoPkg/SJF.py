@@ -1,113 +1,94 @@
-from ProcessPkg.Process import Process
-import copy
 class SJF:
-    def __init__(self,ProcessList):
-        self.ProcessList=ProcessList
-        self.AvgTurnAround=0 
-        self.AvgWaitingTime=0 
- 
+    def __init__(self, ProcessList):
+        self.ProcessList = ProcessList
+        self.AvgTurnAround = 0 
+        self.AvgWaitingTime = 0 
 
-    def SJFAlgoNonPreemptive (self):
-        Counter=0
-        SortedProcessList=[]
-        #sorting proc3ess list according to arrival time and burst time
-        self.ProcessList.sort(key=lambda p: (p.BurstTime,p.ArrivalTime))
-        shortestProcess=min(self.ProcessList,key =lambda p:p.ArrivalTime)
-        SortedProcessList.append(shortestProcess)
-        self.ProcessList.remove(shortestProcess)
-        #calculating start time and end time for first process
-        SortedProcessList[0].StartTime=SortedProcessList[0].ArrivalTime
-        SortedProcessList[0].EndTime=SortedProcessList[0].StartTime+SortedProcessList[0].BurstTime
-        SortedProcessList[0].TurnAround=SortedProcessList[0].EndTime-SortedProcessList[0].ArrivalTime
-        SortedProcessList[0].WaitingTime=SortedProcessList[0].TurnAround-SortedProcessList[0].BurstTime
-        
-        self.AvgTurnAround+=SortedProcessList[0].TurnAround
-        self.AvgWaitingTime+=SortedProcessList[0].WaitingTime
-        
-        Counter+=SortedProcessList[0].EndTime
-        #searching for leastBurst avilable process
-        #calculating the ProcessProperities in the same iteration
-        while (len(self.ProcessList)):
-            shortestProcess=next((p for p in self.ProcessList if p.ArrivalTime<=Counter),None)
-            if(shortestProcess==None):
-                #finding the next processupon arrival
-                shortestProcess=min(self.ProcessList,key=lambda p:p.ArrivalTime)
-                #calculate the Prop
-                shortestProcess.StartTime=shortestProcess.ArrivalTime
-                shortestProcess.EndTime=shortestProcess.StartTime+shortestProcess.BurstTime
-                shortestProcess.TurnAround=shortestProcess.EndTime-shortestProcess.ArrivalTime
-                shortestProcess.WaitingTime=shortestProcess.TurnAround-shortestProcess.BurstTime
-                #Append in the sorted List and update the counter
-                SortedProcessList.append(shortestProcess)
-                self.ProcessList.remove(shortestProcess)
-                Counter=shortestProcess.EndTime
-            else:
-                shortestProcess.StartTime=Counter
-                shortestProcess.EndTime=shortestProcess.StartTime+shortestProcess.BurstTime
-                shortestProcess.TurnAround=shortestProcess.EndTime-shortestProcess.ArrivalTime
-                shortestProcess.WaitingTime=shortestProcess.TurnAround-shortestProcess.BurstTime
-                SortedProcessList.append(shortestProcess)
-                self.ProcessList.remove(shortestProcess)
-                Counter=shortestProcess.EndTime
-            self.AvgTurnAround+=shortestProcess.TurnAround
-            self.AvgWaitingTime+=shortestProcess.WaitingTime
-
-            
-        self.ProcessList=SortedProcessList
-        self.AvgTurnAround=self.AvgTurnAround/len(self.ProcessList)
-        self.AvgWaitingTime=self.AvgWaitingTime/len(self.ProcessList)
-        return self.ProcessList,self.AvgWaitingTime,self.AvgTurnAround
-
-    def SJFAlgoPreemptive (self): 
-        SortedProcessList=[] 
-        ##self.ProcessList.sort(key=lambda p: (p.RemainingTime,p.ArrivalTime))
-        Counter=0
-        FinishedProcess=0
-        while(len(self.ProcessList)!=FinishedProcess):
-            #intialize the minimum remaining time to infinity and selected process to null
-            minRemain= float('inf')
-            selectProcess=None
-            #searching for leastBurst avilable process
-            self.ProcessList.sort(key=lambda p: (p.ArrivalTime,p.RemainingTime))
-            for p in self.ProcessList:
-                if(p.ArrivalTime<=Counter and (p.RemainingTime<minRemain and p.RemainingTime>0)):
-                    minRemain=p.RemainingTime
-                    selectProcess=p
-            #if there is no process available increase the counter and continue searching
-            if(selectProcess==None):
-                Counter+=1
-                continue
-            #if there is a process available execute it for 1 unit of time
-            else:
-                # if The pocess is starting for the first time set the start time
-                if(selectProcess.RemainingTime==selectProcess.BurstTime):
-                    selectProcess.StartTime=Counter
-
-                selectProcess.RemainingTime-=1
-                
-                #if the process is finished calculate the properties and update the counter
-                if(selectProcess.RemainingTime==0):
-                    selectProcess.EndTime=Counter+1
-                    FinishedProcess+=1
-                    ProcessTurnAround=selectProcess.EndTime-selectProcess.ArrivalTime
-                    selectProcess.TurnAround = ProcessTurnAround
-                    self.AvgTurnAround+=ProcessTurnAround
-                    ProcessWaitingTime=ProcessTurnAround-selectProcess.BurstTime
-                    selectProcess.WaitingTime=ProcessWaitingTime
-                    self.AvgWaitingTime += ProcessWaitingTime
-                #creating a new process with burst time 1 to be added in the sorted list
-
-                CreatedProcess= copy.deepcopy(selectProcess)
-                CreatedProcess.StartTime=Counter
-                CreatedProcess.EndTime=Counter+1
-                CreatedProcess.BurstTime=1
-                SortedProcessList.append(CreatedProcess)
-                Counter +=1
-
+    def SJFAlgoNonPreemptive(self):
+        Counter = 0
         n = len(self.ProcessList)
+        timeline = []
+        
+        # Copy list to safely remove items as they finish
+        remaining = list(self.ProcessList)
+
+        while remaining:
+            # Find all processes that have arrived by the current time
+            availableProcesses = [p for p in remaining if p.ArrivalTime <= Counter]
+
+            if not availableProcesses:
+                # If no process is here yet, jump forward in time to the next arrival
+                shortestProcess = min(remaining, key=lambda p: p.ArrivalTime)
+                Counter = shortestProcess.ArrivalTime
+            else:
+                # Pick the one with the shortest burst time. Break ties using Arrival Time.
+                shortestProcess = min(availableProcesses, key=lambda p: (p.BurstTime, p.ArrivalTime))
+                
+                shortestProcess.StartTime = Counter
+                shortestProcess.EndTime = Counter + shortestProcess.BurstTime
+                
+                shortestProcess.TurnAround = shortestProcess.EndTime - shortestProcess.ArrivalTime
+                shortestProcess.WaitingTime = shortestProcess.TurnAround - shortestProcess.BurstTime
+                
+                self.AvgTurnAround += shortestProcess.TurnAround
+                self.AvgWaitingTime += shortestProcess.WaitingTime
+                
+                # Append the solid block to the Gantt chart timeline
+                timeline.append((shortestProcess.PID, shortestProcess.StartTime, shortestProcess.EndTime))
+                
+                Counter = shortestProcess.EndTime
+                remaining.remove(shortestProcess)
+
         self.AvgTurnAround /= n
         self.AvgWaitingTime /= n
-        return SortedProcessList,self.AvgWaitingTime,self.AvgTurnAround,self.ProcessList
+        return timeline, self.AvgWaitingTime, self.AvgTurnAround
 
-        
-        
+    def SJFAlgoPreemptive(self): 
+        Counter = 0
+        FinishedProcess = 0
+        n = len(self.ProcessList)
+        timeline = []
+
+        while FinishedProcess != n:
+            minRemain = float('inf')
+            selectProcess = None
+
+            # Find the arrived process with the absolute shortest remaining time
+            for p in self.ProcessList:
+                if p.ArrivalTime <= Counter and p.RemainingTime > 0:
+                    if p.RemainingTime < minRemain:
+                        minRemain = p.RemainingTime
+                        selectProcess = p
+                    # Tie-breaker: If remaining times are equal, pick the one that arrived first
+                    elif p.RemainingTime == minRemain:
+                        if selectProcess and p.ArrivalTime < selectProcess.ArrivalTime:
+                            selectProcess = p
+
+            # If nobody is here yet, tick the clock forward
+            if selectProcess is None:
+                Counter += 1
+                continue
+            else:
+                # First time starting? Record it.
+                if selectProcess.RemainingTime == selectProcess.BurstTime:
+                    selectProcess.StartTime = Counter
+
+                selectProcess.RemainingTime -= 1
+                
+                # Create the 1-second chunk for the Gantt chart
+                timeline.append((selectProcess.PID, Counter, Counter + 1))
+                Counter += 1
+
+                # If it just finished, calculate final stats
+                if selectProcess.RemainingTime == 0:
+                    FinishedProcess += 1
+                    selectProcess.EndTime = Counter
+                    selectProcess.TurnAround = selectProcess.EndTime - selectProcess.ArrivalTime
+                    selectProcess.WaitingTime = selectProcess.TurnAround - selectProcess.BurstTime
+                    
+                    self.AvgTurnAround += selectProcess.TurnAround
+                    self.AvgWaitingTime += selectProcess.WaitingTime
+
+        self.AvgTurnAround /= n
+        self.AvgWaitingTime /= n
+        return timeline, self.AvgWaitingTime, self.AvgTurnAround

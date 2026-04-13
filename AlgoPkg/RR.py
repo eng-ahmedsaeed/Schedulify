@@ -7,7 +7,7 @@ class RR:
         self.AvgTurnAround = 0
         self.AvgWaitingTime = 0
 
-    def RR(self, TimeQuantum):
+    def RRAlgo(self, TimeQuantum):
         SortedProcessList = []
         Counter = 0
         n = len(self.ProcessList)
@@ -56,4 +56,4 @@ class RR:
 
         self.AvgTurnAround /= n
         self.AvgWaitingTime /= n
-        return SortedProcessList, self.AvgWaitingTime, self.AvgTurnAround, self.ProcessList
+        return SortedProcessList, self.AvgWaitingTime, self.AvgTurnAround
