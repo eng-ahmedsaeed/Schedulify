@@ -63,19 +63,21 @@ class SJF:
         ##self.ProcessList.sort(key=lambda p: (p.RemainingTime,p.ArrivalTime))
         Counter=0
         FinishedProcess=0
+        LastProcessPID=None
         while(len(self.ProcessList)!=FinishedProcess):
             #intialize the minimum remaining time to infinity and selected process to null
             minRemain= float('inf')
             selectProcess=None
             #searching for leastBurst avilable process
-            self.ProcessList.sort(key=lambda p: (p.ArrivalTime,p.RemainingTime))
             for p in self.ProcessList:
                 if(p.ArrivalTime<=Counter and (p.RemainingTime<minRemain and p.RemainingTime>0)):
                     minRemain=p.RemainingTime
                     selectProcess=p
             #if there is no process available increase the counter and continue searching
             if(selectProcess==None):
-                Counter+=1
+                available = [p for p in self.ProcessList if p.ArrivalTime > Counter]
+                nextprocess=min(available,key=lambda p:p.ArrivalTime)
+                Counter+=nextprocess.ArrivalTime-Counter       
                 print("Counter: ",Counter)  
                 continue
             #if there is a process available execute it for 1 unit of time
@@ -91,25 +93,31 @@ class SJF:
                     selectProcess.EndTime=Counter+1
                     FinishedProcess+=1
                     ProcessTurnAround=selectProcess.EndTime-selectProcess.ArrivalTime
-                    selectProcess.TurnAround = ProcessTurnAround
+                    selectProcess.TurnAround=ProcessTurnAround
                     self.AvgTurnAround+=ProcessTurnAround
                     ProcessWaitingTime=ProcessTurnAround-selectProcess.BurstTime
-                    selectProcess.WaitingTime=ProcessWaitingTime
+                    selectProcess.WaitingTime=ProcessWaitingTime    
                     self.AvgWaitingTime += ProcessWaitingTime
                 #creating a new process with burst time 1 to be added in the sorted list
-
-                CreatedProcess= Process(selectProcess.PID)    
-                CreatedProcess.StartTime=Counter
-                CreatedProcess.EndTime=Counter+1
-                CreatedProcess.BurstTime=1
-                SortedProcessList.append(CreatedProcess)
-                Counter +=1
+                if (selectProcess.PID ==LastProcessPID):
+                    SortedProcessList[-1].EndTime=Counter+1
+                    SortedProcessList[-1].BurstTime+=1
+                    SortedProcessList[-1].TurnAround=ProcessTurnAround
+                    SortedProcessList[-1].WaitingTime=ProcessWaitingTime    
+                else:
+                    CreatedProcess= Process(selectProcess.PID,ArrivalTime=selectProcess.ArrivalTime)
+                    CreatedProcess.StartTime=Counter
+                    CreatedProcess.EndTime=Counter+1
+                    CreatedProcess.BurstTime=1
+                    SortedProcessList.append(CreatedProcess)
+                    LastProcessPID=CreatedProcess.PID
+            Counter +=1
             print("Counter: ",Counter)  
 
         n = len(self.ProcessList)
         self.AvgTurnAround /= n
         self.AvgWaitingTime /= n
-        return SortedProcessList,self.AvgWaitingTime,self.AvgTurnAround,self.ProcessList
+        return SortedProcessList,self.AvgWaitingTime,self.AvgTurnAround
 
         
         
