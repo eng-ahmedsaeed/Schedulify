@@ -4,6 +4,7 @@ def get_stylesheet():
         QLabel { font-size: 12px; }
         QLineEdit { background-color: #2A2A2A; border: 1px solid #3A3A3A; border-radius: 4px; padding: 8px; color: white; }
         QLineEdit:focus { border: 1px solid #00BFA6; }
+        QLineEdit:disabled { background-color: #111111; color: #555555; border: 1px solid #1A1A1A; }
         QComboBox { background-color: #2A2A2A; border: 1px solid #3A3A3A; border-radius: 4px; padding: 5px; color: white; }
         QPushButton { color: #00BFA6; background-color: #2A2A2A; border: 1px solid #00BFA6; border-radius: 5px; padding: 8px; }
         QPushButton:hover { background-color: #00BFA6; color: #1A1919; }

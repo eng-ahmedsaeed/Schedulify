@@ -69,7 +69,7 @@ class CPUSchedulerApp(QWidget):
         self.layout.addWidget(self.dropdown, 6, 1)
 
         self.dropdown.currentTextChanged.connect(self.toggle_inputs)
-        self.toggle_inputs()
+       
 
         self.chk_live_mode = QCheckBox("Enable Live Animation")
         self.chk_live_mode.setChecked(True) # Checked by default
@@ -127,6 +127,7 @@ class CPUSchedulerApp(QWidget):
         self.gif_label.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight)
         
         self.layout.addWidget(self.gif_label, 11, 2, 2, 1)
+        self.toggle_inputs()
 
 
     def add_table_row(self, pid, arrival, burst, remaining, priority):
@@ -212,20 +213,20 @@ class CPUSchedulerApp(QWidget):
         # Toggle Priority Field
         if "Priority" in algo:
             self.entries["Priority"].setEnabled(True)
-            self.entries["Priority"].setStyleSheet("background-color: #2A2A2A; color: white;")
+            self.table.setColumnHidden(4, False)
         else:
             self.entries["Priority"].clear()
             self.entries["Priority"].setEnabled(False)
-            self.entries["Priority"].setStyleSheet("background-color: #111111; color: #555555;") # Dark out
+            self.table.setColumnHidden(4, True)
 
         # Toggle Round Robin Field
         if algo == "Round Robin":
             self.entries["Round Robin Quantum"].setEnabled(True)
-            self.entries["Round Robin Quantum"].setStyleSheet("background-color: #2A2A2A; color: white;")
+        
         else:
             self.entries["Round Robin Quantum"].clear()
             self.entries["Round Robin Quantum"].setEnabled(False)
-            self.entries["Round Robin Quantum"].setStyleSheet("background-color: #111111; color: #555555;")
+        
 
     def run_simulation(self):
         process_list = []
@@ -303,9 +304,24 @@ class CPUSchedulerApp(QWidget):
         
         current_event = None
         for event in self.master_timeline:
-            pid, start, end = event
+            # Handle Dicts (RR), Process Objects (SJF), or Tuples safely
+            if isinstance(event, dict):
+                pid = str(event.get("PID", "Unknown"))
+                start = int(event.get("StartTime", 0))
+                end = int(event.get("EndTime", 0))
+            elif hasattr(event, "PID") or hasattr(event, "pid"): # It's a Process Object
+                pid = str(getattr(event, "PID", getattr(event, "pid", "Unknown")))
+                start = int(getattr(event, "StartTime", 0))
+                end = int(getattr(event, "EndTime", 0))
+            else:
+                pid, start_str, end_str = event
+                pid = str(pid)
+                start = int(start_str)
+                end = int(end_str)
+
             if start <= self.current_time < end:
-                current_event = event
+                # Store the clean integer version
+                current_event = (pid, start, end)
                 break
 
         if current_event:
@@ -335,7 +351,19 @@ class CPUSchedulerApp(QWidget):
         self.gantt_view.setSceneRect(0, 0, self.x_offset + 50, 120)
         self.gantt_view.horizontalScrollBar().setValue(int(self.x_offset))
 
-        if self.master_timeline and self.current_time >= max([e[2] for e in self.master_timeline]):
+        # Safely extract the EndTime to check if we are done
+        max_end_time = 0
+        for e in self.master_timeline:
+            if isinstance(e, dict):
+                e_end = int(e.get("EndTime", 0))
+            elif hasattr(e, "EndTime"):
+                e_end = int(getattr(e, "EndTime", 0))
+            else:
+                e_end = int(e[2])
+            if e_end > max_end_time:
+                max_end_time = e_end
+                
+        if self.master_timeline and self.current_time >= max_end_time:
             self.timer.stop()
             self.entries["Arrival Time"].setEnabled(True)
             self.entries["Arrival Time"].setPlaceholderText("")
@@ -344,8 +372,7 @@ class CPUSchedulerApp(QWidget):
             self.movie.stop()
             self.success_sound.play()
             self.show_custom_success()
-            
-            #QMessageBox.information(self, "Simulation Complete", "The live scheduling simulation has finished successfully!")
+
 
     def draw_instant_gantt(self):
         """Draws the entire timeline immediately (Instant Mode)"""
@@ -362,8 +389,22 @@ class CPUSchedulerApp(QWidget):
 
         palette = ["#69F0AE", "#00BFA6", "#6C63FF", "#FF6B6B", "#FFD166", "#118AB2", "#EF476F"]
 
+        # Standardize all incoming data into strict [pid(str), start(int), end(int)]
+        clean_timeline = []
+        for event in self.master_timeline:
+            if isinstance(event, dict):
+                clean_timeline.append([str(event.get("PID")), int(event.get("StartTime")), int(event.get("EndTime"))])
+            elif hasattr(event, "PID") or hasattr(event, "pid"):
+                pid = str(getattr(event, "PID", getattr(event, "pid", "Unknown")))
+                clean_timeline.append([pid, int(getattr(event, "StartTime", 0)), int(getattr(event, "EndTime", 0))])
+            else:
+                clean_timeline.append([str(event[0]), int(event[1]), int(event[2])])
+
+        # Sort based on the integer start time
+        clean_timeline.sort(key=lambda x: x[1])
+
         consolidated_timeline = []
-        for event in sorted(self.master_timeline, key=lambda x: x[1]):
+        for event in clean_timeline:
             if not consolidated_timeline:
                 consolidated_timeline.append(list(event))
             else:
@@ -412,14 +453,29 @@ class CPUSchedulerApp(QWidget):
         self.gantt_view.horizontalScrollBar().setValue(0)
         self.success_sound.play()
         self.show_custom_success()
-        #QMessageBox.information(self, "Simulation Complete", "The scheduling simulation has finished successfully!")
 
     def get_pid_at(self, time):
+        """Returns the PID of the process running at a specific given time."""
         for e in self.master_timeline:
-            if e[1] <= time < e[2]:
-                return e[0]
+            if isinstance(e, dict):
+                pid = str(e.get("PID", "Unknown"))
+                start = int(e.get("StartTime", 0))
+                end = int(e.get("EndTime", 0))
+            elif hasattr(e, "PID") or hasattr(e, "pid"):
+                pid = str(getattr(e, "PID", getattr(e, "pid", "Unknown")))
+                start = int(getattr(e, "StartTime", 0))
+                end = int(getattr(e, "EndTime", 0))
+            else:
+                pid = str(e[0])
+                start = int(e[1])
+                end = int(e[2])
+
+            # Check if the requested time falls within this block
+            if start <= time < end:
+                return pid
+                
         return None
-    
+        
     def update_live_table(self, running_pid):
         """Finds the running process in the table and ticks its remaining time down by 1."""
         for row in range(self.table.rowCount()):

@@ -6,15 +6,15 @@ from ProcessPkg.Process import Process
 
 def main():
     processes = [
-        Process(1, ArrivalTime=0, BurstTime=6, Priority=3),
-        Process(2, ArrivalTime=2, BurstTime=4, Priority=1),
-        Process(3, ArrivalTime=3, BurstTime=5, Priority=2),
-        Process(4, ArrivalTime=7, BurstTime=2, Priority=1)
+        Process(1, ArrivalTime=0, BurstTime=3),
+        Process(2, ArrivalTime=0, BurstTime=2),
+        Process(3, ArrivalTime=0, BurstTime=3),
+        Process(4, ArrivalTime=0, BurstTime=2)
     ]
     
     quantum = 2
-    Algo = FCFS(processes)
-    processes, AvgW, AvgT  = Algo.FCFSAlgo()
+    Algo = RR(processes)
+    processes, AvgW, AvgT  = Algo.RRAlgo(2)
 
     for p in processes:
         print(p,"-")

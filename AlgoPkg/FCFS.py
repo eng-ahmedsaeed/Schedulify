@@ -1,14 +1,15 @@
 from ProcessPkg.Process import Process
+from copy import deepcopy
 class FCFS:
     def __init__(self,ProcessList):
-        self.ProcessList=ProcessList
+        self.ProcessList=deepcopy(ProcessList)
         self.AvgTurnAround=0 
         self.AvgWaitingTime=0 
  
 
     def FCFSAlgo (self):
         #sorting proc3ess list according to arrival time and burst time
-        self.ProcessList.sort(key=lambda p: (p.ArrivalTime,p.BurstTime))
+        self.ProcessList.sort(key=lambda p: (p.ArrivalTime))
         #calculating start time and end time for each process
         counter = self.ProcessList[0].BurstTime
         self.ProcessList[0].StartTime=self.ProcessList[0].ArrivalTime
