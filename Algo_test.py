@@ -13,8 +13,8 @@ def main():
     ]
     
     quantum = 2
-    Algo = Priority(processes)
-    processes, AvgW, AvgT , original  = Algo.PriorityAlgoPreemptive()
+    Algo = FCFS(processes)
+    processes, AvgW, AvgT  = Algo.FCFSAlgo()
 
     for p in processes:
         print(p,"-")
