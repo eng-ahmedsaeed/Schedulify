@@ -8,7 +8,7 @@ class FCFS:
 
     def FCFSAlgo (self):
         #sorting proc3ess list according to arrival time and burst time
-        self.ProcessList.sort(key=lambda p: (p.ArrivalTime,p.BurstTime))
+        self.ProcessList.sort(key=lambda p: (p.ArrivalTime))
         #calculating start time and end time for each process
         counter = self.ProcessList[0].BurstTime
         self.ProcessList[0].StartTime=self.ProcessList[0].ArrivalTime
