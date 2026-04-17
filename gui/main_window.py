@@ -30,6 +30,7 @@ class CPUSchedulerApp(QWidget):
         self.current_time = 0
         self.master_timeline = []
         self.x_offset = 20 
+        self.is_paused = False
 
         self.setup_ui()
         self.setup_sounds()
@@ -89,7 +90,13 @@ class CPUSchedulerApp(QWidget):
         self.btn_start = QPushButton("Start Simulation")
         self.btn_start.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
         self.btn_start.clicked.connect(self.run_simulation) 
-        self.layout.addWidget(self.btn_start, 8, 0, 1, 2) # Spans 2 columns
+        self.layout.addWidget(self.btn_start, 8, 0) # Spans 1 columns
+
+        self.btn_pause = QPushButton("Pause Simulation")
+        self.btn_pause.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        self.btn_pause.setEnabled(False) # Disabled until they click Start
+        self.btn_pause.clicked.connect(self.toggle_pause)
+        self.layout.addWidget(self.btn_pause, 8, 1)
 
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(["PID", "Arrival", "Burst", "Remaining", "Priority"])
@@ -131,6 +138,27 @@ class CPUSchedulerApp(QWidget):
         self.toggle_inputs()
 
 
+    def toggle_pause(self):
+        if not self.chk_live_mode.isChecked() or not self.master_timeline:
+            return # Doesn't do anything in Instant Mode
+
+        self.is_paused = not self.is_paused
+
+        if self.is_paused:
+            self.btn_pause.setText("Resume Simulation")
+            # Make it orange so the user clearly knows it is paused
+            self.btn_pause.setStyleSheet("""
+                QPushButton { color: #1A1919; background-color: #FFA500; border-radius: 5px; padding: 8px;}
+                QPushButton:hover { background-color: #E69500; }
+            """)
+            self.timer.stop()
+            self.movie.setPaused(True)
+        else:
+            self.btn_pause.setText("Pause Simulation")
+            self.btn_pause.setStyleSheet("") # Reset to default theme
+            self.timer.start(1000)
+            self.movie.setPaused(False)
+
     def add_table_row(self, pid, arrival, burst, remaining, priority):
         row_pos = self.table.rowCount()
         self.table.insertRow(row_pos)
@@ -149,19 +177,47 @@ class CPUSchedulerApp(QWidget):
         if not pid or not burst:
             self.show_Error_Burst_PID()
             return
+        """
         if not burst.isdigit() or int(burst) <=0:
             #QMessageBox.warning(self, "Invalid Input", "Burst Time should be positive Number")
             self.show_Error_Invalid("Burst Time should be positive Number")
             return
+        """
+        try:
+            burst = int(burst)
+            if burst <= 0:
+                raise ValueError
+        except ValueError:
+            self.show_Error_Invalid("Burst Time must be a positive integer")
+            return
+        """
         if arrival and not arrival.isdigit():
             #QMessageBox.warning(self, "Invalid Input", "Arrival Time should be Non Negative Number")
             self.show_Error_Invalid("Arrival Time should be Non Negative Number")
             return
+        """
+        if arrival:
+            try:
+                arrival = int(arrival)
+                if arrival < 0:
+                    raise ValueError
+            except ValueError:
+                self.show_Error_Invalid("Arrival Time must be a non-negative integer")
+                return
+        """   
         if priority and not priority.lstrip('-').isdigit(): # Allows negative priorities if you want
             #QMessageBox.warning(self, "Invalid Input", "Priority must be a valid number")
             self.show_Error_Invalid("Priority must be a valid number")
             return
-        
+        """
+        if priority:
+            try:
+                priority = int(priority)
+            except ValueError:
+                self.show_Error_Invalid("Priority must be a valid integer.")
+                return
+
+
         if not arrival: arrival = "0"
         if not priority: priority = "0"
 
@@ -184,7 +240,7 @@ class CPUSchedulerApp(QWidget):
 
         if not priority: priority = "0"
 
-        if self.timer.isActive():
+        if self.timer.isActive() or self.is_paused:
             # If the live clock is ticking, the arrival time is EXACTLY right now!
             arrival = str(self.current_time)
         else:
@@ -202,8 +258,9 @@ class CPUSchedulerApp(QWidget):
         self.entries["PID"].setFocus()
 
         # 4. Trigger the seamless recalculation
-        if self.chk_live_mode.isChecked() and self.timer.isActive():
-            self.run_simulation()
+        if self.chk_live_mode.isChecked():
+            if self.timer.isActive() or self.is_paused:
+                self.run_simulation()
         elif not self.chk_live_mode.isChecked():
             self.run_simulation()
     
@@ -256,7 +313,14 @@ class CPUSchedulerApp(QWidget):
             timeline = [(p.get_PID(), p.get_StartTime(), p.get_EndTime()) for p in completed]
         elif selected_algo == "Round Robin":
             q_text = self.entries["Round Robin Quantum"].text()
-            quantum = int(q_text) if q_text.isdigit() else 2
+          #  quantum = int(q_text) if q_text.isdigit() else 2
+            try:
+                quantum = int(q_text)
+                if quantum <= 0:
+                    raise ValueError    
+            except ValueError:
+                self.show_Error_Invalid("Time Quantum must be a valid positive integer.")
+                return
             scheduler = RR(process_list)
             timeline, avg_wait, avg_turn = scheduler.RRAlgo(quantum)
         elif selected_algo == "Priority (Non-Preemptive)":
@@ -279,7 +343,7 @@ class CPUSchedulerApp(QWidget):
         # --- MODE ROUTING ---
         if self.chk_live_mode.isChecked():
             # Start Live Animation
-            if not self.timer.isActive():
+            if not self.timer.isActive() and not self.is_paused:
                 self.scene.clear()
                 self.current_time = 0
                 self.x_offset = 20
@@ -293,9 +357,15 @@ class CPUSchedulerApp(QWidget):
                 self.entries["Arrival Time"].setPlaceholderText("Auto (Live)")
                 self.entries["Arrival Time"].setStyleSheet("background-color: #111111; color: #555555;")
                 self.movie.start()
+
+                self.is_paused = False
+                self.btn_pause.setEnabled(True)
+                self.btn_pause.setText("Pause Simulation")
+                self.btn_pause.setStyleSheet("")
         else:
             # Stop timer and Draw Instantly
             self.timer.stop()
+            self.btn_pause.setEnabled(False)
             self.draw_instant_gantt()
 
 
@@ -369,7 +439,7 @@ class CPUSchedulerApp(QWidget):
             self.entries["Arrival Time"].setEnabled(True)
             self.entries["Arrival Time"].setPlaceholderText("")
             self.entries["Arrival Time"].setStyleSheet("background-color: #2A2A2A; color: white;")
-            
+            self.btn_pause.setEnabled(False)
             self.movie.stop()
             self.success_sound.play()
             self.show_custom_success()
@@ -533,6 +603,11 @@ class CPUSchedulerApp(QWidget):
         self.current_time = 0
         self.master_timeline = []
         self.x_offset = 20
+
+        self.is_paused = False
+        self.btn_pause.setText("Pause Simulation")
+        self.btn_pause.setStyleSheet("")
+        self.btn_pause.setEnabled(False)
         
         self.table.setRowCount(0)
         self.scene.clear()
